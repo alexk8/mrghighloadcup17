@@ -47,7 +47,7 @@ namespace websrv1.Controllers
                  && (string.IsNullOrEmpty(q.gender) || v.UserRef.gender == q.gender)
                  );
             List<Visit> visitsList = visits.ToList();//count
-            return Json(new { avg = visitsList.Count==0 ? 0.0 : Math.Round(visits.Average(v => v.mark), 5) });
+            return Json(new { avg = visitsList.Count==0 ? 0.0 : Math.Round(visitsList.Average(v => v.mark), 5) });
 
         }
 
