@@ -9,52 +9,23 @@ using System.Threading.Tasks;
 
 namespace shared.Services
 {
+    public class DataFile
+    {
+        public List<User> users = null;
+        public List<Location> locations = null;
+        public List<Visit> visits = null;
+    }
+
     public class FileDbLoader
     {
-        class UsersFile
-        {
-            public List<User> users=null;
-        }
-        class LocationsFile
-        {
-            public List<Location> locations=null;
-        }
-        class VisitsFile
-        {
-            public List<Visit> visits=null;
-        }
-
-
-
-        public static IDatabase Load(string zipFn)
+        public static List<DataFile> Load(string zipFn)
         {
             using (ZipArchive zip = ZipFile.OpenRead(zipFn))
             {
-
-                List<List<User>> Users = new List<List<User>>();
-                List<List<Location>> Locations = new List<List<Location>>();
-                List<List<Visit>> Visits = new List<List<Visit>>();
-                long started = DateTime.Now.Ticks;
-                foreach (var file in zip.Entries)
-                {
-                    if (file.Name.StartsWith("users"))
-                    {
-                        using (var fs = new StreamReader(file.Open(), Encoding.UTF8))
-                            Users.Add(JsonSerializers.DeserializeStream<UsersFile>(fs).users);
-                    }
-                    else if (file.Name.StartsWith("locations"))
-                    {
-                        using (var fs = new StreamReader(file.Open(), Encoding.UTF8))
-                            Locations.Add(JsonSerializers.DeserializeStream<LocationsFile>(fs).locations);
-                    }
-                    else if (file.Name.StartsWith("visits"))
-                    {
-                        using (var fs = new StreamReader(file.Open(), Encoding.UTF8))
-                            Visits.Add(JsonSerializers.DeserializeStream<VisitsFile>(fs).visits);
-                    }
-                }
-                Console.WriteLine($"data loaded in {(DateTime.Now.Ticks - started) / 10000} ms");
-                return new InmemoryDatabase(Users, Locations, Visits);
+                return zip.Entries
+                    .Where(file => file.Name.StartsWith("users") || file.Name.StartsWith("locations") || file.Name.StartsWith("visits"))
+                    .Select(file => JsonSerializers.DeserializeUtf8Stream<DataFile>(file.Open()))
+                    .ToList();
             }
         }
     }

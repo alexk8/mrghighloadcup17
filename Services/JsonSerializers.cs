@@ -1,11 +1,17 @@
 ﻿//using NetJSON;
 using System.IO;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace shared.Services
 {
     public class JsonSerializers
     {
+        public static T DeserializeUtf8Stream<T>(Stream strm)
+        {
+            using (var rdr = new StreamReader(strm, Encoding.UTF8))
+                return DeserializeStream<T>(rdr);
+        }
         public static T DeserializeStream<T>(TextReader reader)
         {
             //return NetJSON.NetJSON.Deserialize<T>(reader); //50% faster

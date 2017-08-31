@@ -1,0 +1,1 @@
+docker run -v /tmp/data:/tmp/data -p 80:80  verkest

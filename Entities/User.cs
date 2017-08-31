@@ -10,7 +10,7 @@ using System.Text;
 
 namespace shared.Entities
 {
-    public class User 
+    public class User : IEntity
     {
         [JsonIgnore]
         public bool Valid => id != 0
@@ -23,7 +23,7 @@ namespace shared.Entities
 
 
         //        id - уникальный внешний идентификатор пользователя.Устанавливается тестирующей системой и используется затем, для проверки ответов сервера. 32-разрядное целое число.
-        public uint id;
+        public uint id { get; set; }
 
         //email - адрес электронной почты пользователя. Тип - unicode-строка длиной до 100 символов.Гарантируется уникальность.
         [MaxLength(100)]
@@ -45,7 +45,10 @@ namespace shared.Entities
         //birth_date - дата рождения, записанная как число секунд от начала UNIX-эпохи по UTC (другими словами - это timestamp). Ограничено снизу 01.01.1930 и сверху 01.01.1999-ым.
         [Required]
         [Range(-1262304000, 915148800)]
-        public int birth_date=int.MaxValue;
+        public int birth_date = int.MaxValue;
+
+        [JsonIgnore]
+        public string jsonCached {get; set;}
 
         //[NonSerialized]
         //public DateTimeOffset birthDate => new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero).AddSeconds(birth_date);
@@ -72,15 +75,17 @@ namespace shared.Entities
                         break;
                 }
             }
+            jsonCached = JsonSerializers.Serialize(this);
+
         }
 
         List<Visit> visits;
 
-
+        static readonly Visit[] empty = new Visit[0];
         public IEnumerable<Visit> GetVisits()
         {
             if (visits != null) return visits;
-            else return new Visit[] { };
+            else return empty;
         }
         public void AddVisit(Visit visit)
         {

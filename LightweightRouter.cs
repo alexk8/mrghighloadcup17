@@ -28,7 +28,12 @@ namespace websrv1
             if (val == null) return Tuple.Create(404, "");
             else if (val is string) return Tuple.Create(200, (string)val);
             else if (val is HttpError) return Tuple.Create((val as HttpError).code, "");
-            else return Tuple.Create(200, JsonSerializers.SerializeUnknown(val));
+            else if (val is IEntity)
+            {
+                string json = (val as IEntity).jsonCached;
+                if (json != null) return Tuple.Create(200, json);
+            }
+            return Tuple.Create(200, JsonSerializers.SerializeUnknown(val));
         }
 
 

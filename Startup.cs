@@ -5,7 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using shared.Services;
 using srvkestrel;
+using System;
 using System.IO;
+using System.Linq;
 using websrv1;
 
 namespace KestrelDemo
@@ -26,7 +28,14 @@ namespace KestrelDemo
 
             string file = Configuration["server:dbdatafile"];
             logger.LogInformation($"datafile: {file}");
-            staticmiddleware = new LightweightMiddleware(new LightweightRouter(FileDbLoader.Load(file)));
+
+            long started = DateTime.Now.Ticks;
+            var data = FileDbLoader.Load(file);
+            Console.WriteLine($"data loaded in {(DateTime.Now.Ticks - started) / 10000} ms");
+
+            var db = new InmemoryDatabase(data);
+
+            staticmiddleware = new LightweightMiddleware(new LightweightRouter(db));
         }
 
 

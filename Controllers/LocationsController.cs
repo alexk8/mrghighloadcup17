@@ -48,6 +48,8 @@ namespace websrv1.Controllers
                  );
             List<Visit> visitsList = visits.ToList();//count
             return Json(new { avg = visitsList.Count==0 ? 0.0 : Math.Round(visitsList.Average(v => v.mark), 5) });
+            //OR            return Json(new { avg = Math.Round(visits.Average(v => (int?)v.mark)??0, 5) });
+
 
         }
 

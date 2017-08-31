@@ -8,7 +8,7 @@ using System.Text;
 
 namespace shared.Entities
 {
-    public class Visit 
+    public class Visit :IEntity
     {
         [JsonIgnore]
         public bool Valid => id != 0
@@ -18,7 +18,7 @@ namespace shared.Entities
             && valid.Range(mark, 0, 5)
             && valid.Range(visited_at, 946684800, 1420070400)
             ;
-        public uint id;// - уникальный внешний id посещения.Устанавливается тестирующей системой. 32-разрядное целое число.
+        public uint id { get; set; }// - уникальный внешний id посещения.Устанавливается тестирующей системой. 32-разрядное целое число.
         public uint location= uint.MaxValue;// - id достопримечательности. 32-разрядное целое число.
         public uint user= uint.MaxValue;// - id путешественника. 32-разрядное целое число.
         [Range(946684800, 1420070400)]
@@ -33,8 +33,12 @@ namespace shared.Entities
         [JsonIgnore]
         public User UserRef{ get; set; }
 
+        [JsonIgnore]
+        public string jsonCached { get; set; }
 
-    public void updateFrom(JObject val,Location newLoc,User newUser)
+
+
+        public void updateFrom(JObject val,Location newLoc,User newUser)
         {
             foreach (var prop in val)
             {
@@ -61,6 +65,9 @@ namespace shared.Entities
                 else if (prop.Key=="visited_at") visited_at = prop.Value.Value<int>();
                 else if (prop.Key=="mark") mark = prop.Value.Value<int>();
             }
+
+            jsonCached = JsonSerializers.Serialize(this);
+
         }
     }
 }

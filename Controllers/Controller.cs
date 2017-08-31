@@ -1,4 +1,5 @@
 ﻿using shared;
+using shared.Entities;
 using shared.Services;
 
 namespace websrv1.Controllers
@@ -16,6 +17,11 @@ namespace websrv1.Controllers
         }
         public string Json(object o)
         {
+            if(o is IEntity)
+            {
+                string json = (o as IEntity).jsonCached;
+                if (json != null) return json;
+            }
             return JsonSerializers.SerializeUnknown(o);
         }
     }

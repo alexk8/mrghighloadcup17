@@ -11,17 +11,25 @@ namespace shared.Services
         ConcurrentDictionary<uint, Location> Locations;
         ConcurrentDictionary<uint, Visit> Visits;
 
-        public InmemoryDatabase(IEnumerable<List<User>> users, IEnumerable<List<Location>> loactions, IEnumerable<List<Visit>> visits)
+
+        public void FillTable<T>(ref ConcurrentDictionary<uint,T> dest,IEnumerable<List<T>> batch) where T:IEntity
+        {
+            var count = batch.Sum(list => list.Count);
+            dest = new ConcurrentDictionary<uint, T>(3, count + count >> 2);
+            foreach (var x in batch.SelectMany(list => list)) dest[x.id] = x;
+            foreach (var list in batch) list.Clear();//free some mem
+        }
+
+
+        public InmemoryDatabase(List<DataFile> filesContents)
         {
             try
             {
                 long started = DateTime.Now.Ticks;
-                Users = new ConcurrentDictionary<uint, User>(users.SelectMany(list=>list).ToDictionary(o => o.id, o => o));
-                foreach (var list in users) list.Clear();
-                Locations = new ConcurrentDictionary<uint, Location>(loactions.SelectMany(list => list).ToDictionary(o => o.id, o => o));
-                foreach (var list in loactions) list.Clear();
-                Visits = new ConcurrentDictionary<uint, Visit>(visits.SelectMany(list => list).ToDictionary(o => o.id, o => o));
-                foreach (var list in visits) list.Clear();
+
+                FillTable<User>(ref Users, filesContents.Where(f => f.users != null).Select(f => f.users));
+                FillTable<Location>(ref Locations, filesContents.Where(f => f.locations != null).Select(f => f.locations));
+                FillTable<Visit>(ref Visits, filesContents.Where(f => f.visits != null).Select(f => f.visits));
 
                 Console.WriteLine($"data size:  U={Users.Count}  L={Locations.Count}  V={Visits.Count} ");
                 Console.WriteLine($"DB loaded in {(DateTime.Now.Ticks - started) / 10000} ms");
@@ -33,6 +41,8 @@ namespace shared.Services
 
                 started = DateTime.Now.Ticks;
                 InitCaches();
+                Console.WriteLine("generating json cache");
+                InitJsonCaches();
                 Console.WriteLine($"cash done in {(DateTime.Now.Ticks - started) / 10000} ms");
 
                 Console.Write("GC:");
@@ -43,6 +53,14 @@ namespace shared.Services
             {
                 Console.WriteLine("ERROR: "+e.Message);
             }
+        }
+
+        private void InitJsonCaches()
+        {
+            foreach (var x in Users.Values) x.jsonCached = JsonSerializers.Serialize(x);
+            foreach (var x in Locations.Values) x.jsonCached = JsonSerializers.Serialize(x);
+            //too much memory
+            //foreach (var x in Visits.Values) x.jsonCached = JsonSerializers.Serialize(x); 
         }
 
         private void InitCaches()
