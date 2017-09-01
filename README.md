@@ -1,4 +1,3 @@
-# mrghighloadcup17
+# "afterparty" branch is out of Ratings (benchmarking purposes)
+See rated solution in master branch 
 
-Best result:
-![result](BESTRESULT.png "Result")
