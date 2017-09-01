@@ -68,7 +68,7 @@ namespace srvkestrel
         }
 
 
-        private async Task<Tuple<int, string>> processInternal(HttpRequest requ)
+        private async Task<Resp> processInternal(HttpRequest requ)
         {
             try
             {
@@ -94,24 +94,24 @@ namespace srvkestrel
                             return router.processPostRequest(requ.Path, Encoding.UTF8.GetString(data));
                         }
                         else
-                            return Tuple.Create(400, "");
+                            return new Resp { code = 400 };
                     default:
-                        return Tuple.Create(404, "");
+                        return new Resp { code = 404 };
                 }
             }
             catch (HttpError e)
             {
-                return Tuple.Create(e.code, "");
+                return new Resp { code = e.code };
             }
             catch (Exception)
             {
-                return Tuple.Create(500, "");
+                return new Resp { code = 500 };
             }
         }
 
         //public class PortStat {public int requests = 0; };
         //public static ConcurrentDictionary<int, PortStat> portStat = new ConcurrentDictionary<int, PortStat>();
-        //static readonly byte[] empty = new byte[0];
+        static readonly byte[] empty = new byte[0];
 
         public async Task process(HttpContext client)
         {
@@ -130,16 +130,23 @@ namespace srvkestrel
                                 Interlocked.Increment(ref portStat[port].requests);
             */
 
-            Tuple<int, string> resp = await processInternal(client.Request);
+            Resp resp = await processInternal(client.Request).ConfigureAwait(false);
+            //object must be either null,string or byte[]
 
-            client.Response.StatusCode = resp.Item1;
+
+            client.Response.StatusCode = resp.code;
             client.Response.Headers["Connection"] = "keep-alive";
             //client.Response.Headers["Keep-Alive"] = "timeout=3000";
 
             Interlocked.Add(ref Stats.totalTicksBefWrite, DateTime.Now.Ticks - started);
-            if (resp.Item1 == 200)
+            if (resp.code == 200)
             {
-                byte[] respdata = Encoding.UTF8.GetBytes(resp.Item2 ?? "");
+                byte[] respdata;
+                if (resp.bodyStr!=null)
+                    respdata = Encoding.UTF8.GetBytes(resp.bodyStr);
+                else if (resp.body!=null)
+                    respdata = resp.body;
+                else respdata = empty;
                 client.Response.ContentLength = respdata.Length;
                 client.Response.ContentType = "application/json; charset=utf-8";
                 await client.Response.Body.WriteAsync(respdata, 0, respdata.Length).ConfigureAwait(false);

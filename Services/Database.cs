@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using shared.Entities;
+using System.Text;
+
 namespace shared.Services
 {
     public class InmemoryDatabase:IDatabase
@@ -57,10 +59,10 @@ namespace shared.Services
 
         private void InitJsonCaches()
         {
-            foreach (var x in Users.Values) x.jsonCached = JsonSerializers.Serialize(x);
-            foreach (var x in Locations.Values) x.jsonCached = JsonSerializers.Serialize(x);
+            foreach (var x in Users.Values) x.jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(x));
+            foreach (var x in Locations.Values) x.jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(x));
             //too much memory
-            //foreach (var x in Visits.Values) x.jsonCached = JsonSerializers.Serialize(x); 
+            //foreach (var x in Visits.Values) x.jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(x)); 
         }
 
         private void InitCaches()

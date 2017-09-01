@@ -7,7 +7,7 @@ namespace shared.Entities
     public interface IEntity
     {
         uint id { get; }
-        string jsonCached{get;}
+        byte[] jsonCached{get;}
 
-        }
     }
+}

@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using shared.Services;
 using shared.Entities;
 using shared;
+using srvkestrel;
 
 namespace websrv1
 {
@@ -23,17 +24,17 @@ namespace websrv1
         }
 
 
-        private Tuple<int, string> toJson(object val)
+        private Resp toJson(object val)
         {
-            if (val == null) return Tuple.Create(404, "");
-            else if (val is string) return Tuple.Create(200, (string)val);
-            else if (val is HttpError) return Tuple.Create((val as HttpError).code, "");
+            if (val == null) return new Resp { code = 404 };
+            else if (val is string) return new Resp { bodyStr = (string)val };
+            else if (val is HttpError) return new Resp { code = (val as HttpError).code };
             else if (val is IEntity)
             {
-                string json = (val as IEntity).jsonCached;
-                if (json != null) return Tuple.Create(200, json);
+                byte[] json = (val as IEntity).jsonCached;
+                if (json != null) return new Resp { body = json };
             }
-            return Tuple.Create(200, JsonSerializers.SerializeUnknown(val));
+            return new Resp { bodyStr = JsonSerializers.SerializeUnknown(val) };
         }
 
 
@@ -42,12 +43,12 @@ namespace websrv1
         VisitsController visits;
 
 
-        public Tuple<int, string> processGetRequest(string pathStr, NameValueCollection query)
+        public Resp processGetRequest(string pathStr, NameValueCollection query)
         {
             string[] path = pathStr.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            if (path.Length < 2) return Tuple.Create(404, "");
+            if (path.Length < 2) return new Resp { code = 404 };
             uint id;
-            if (!uint.TryParse(path[1], out id)) return Tuple.Create(404, "");
+            if (!uint.TryParse(path[1], out id)) return new Resp { code = 404 };
             string tip = path[0];
             string sub = path.Length > 2 ? "/" + path[2] : "";
 
@@ -69,14 +70,15 @@ namespace websrv1
                 case "locations/avg":
                     return toJson(locations.GetAvg(id, new SearchRequest(query)));
                 default:
-                    return Tuple.Create(404, "");
+                    return new Resp { code = 404 };
             }
         }
 
 
-        public Tuple<int, string> processPostRequest(string pathStr, string jsonStr)
+
+        public Resp processPostRequest(string pathStr, string jsonStr)
         {
-            if (string.IsNullOrEmpty(jsonStr)) return Tuple.Create(400, "");
+            if (string.IsNullOrEmpty(jsonStr)) return new Resp {code=400};
 
             //Match m = Regex.Match(path, "^/([a-z]+)/(new|\\d+)");
             //if (!m.Success) return Tuple.Create(404, "");
@@ -84,11 +86,11 @@ namespace websrv1
             //string id = m.Groups[2].Captures[0].Value;
 
             string[] path = (pathStr??"").Split('/', StringSplitOptions.RemoveEmptyEntries);
-            if(path.Length!=2) return Tuple.Create(404, "");
+            if (path.Length != 2) return new Resp { code = 404 };
             string tip = path[0];
             string id = path[1];
             uint id2;
-            if (id!="new" && !uint.TryParse(id, out id2)) return Tuple.Create(404, "");
+            if (id!="new" && !uint.TryParse(id, out id2)) return new Resp { code = 404 };
 
             if (id == "new") tip = tip + "/" + id;
             try
@@ -108,16 +110,16 @@ namespace websrv1
                     case "locations":
                         return toJson(locations.Update(uint.Parse(id), JObject.Parse(jsonStr)));
                     default:
-                        return Tuple.Create(404, "");
+                        return new Resp { code = 404 };
                 }
             }
             catch (JsonSerializationException)
             {
-                return Tuple.Create(400, "");
+                return new Resp { code = 400 };
             }
             catch (JsonReaderException)
             {
-                return Tuple.Create(400, "");
+                return new Resp { code = 400 };
             }
         }
     }

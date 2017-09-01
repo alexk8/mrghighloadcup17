@@ -48,7 +48,7 @@ namespace shared.Entities
         public int birth_date = int.MaxValue;
 
         [JsonIgnore]
-        public string jsonCached {get; set;}
+        public byte[] jsonCached {get; set;}
 
         //[NonSerialized]
         //public DateTimeOffset birthDate => new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero).AddSeconds(birth_date);
@@ -75,7 +75,7 @@ namespace shared.Entities
                         break;
                 }
             }
-            jsonCached = JsonSerializers.Serialize(this);
+            jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(this));
 
         }
 

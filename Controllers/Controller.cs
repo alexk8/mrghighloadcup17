@@ -15,14 +15,17 @@ namespace websrv1.Controllers
         {
             return new HttpError(400);
         }
-        public string Json(object o)
+        public object Json(object o)
         {
+            return o;
+            /*
             if(o is IEntity)
             {
                 string json = (o as IEntity).jsonCached;
                 if (json != null) return json;
             }
             return JsonSerializers.SerializeUnknown(o);
+            */
         }
     }
 }

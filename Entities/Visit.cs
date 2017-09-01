@@ -34,7 +34,7 @@ namespace shared.Entities
         public User UserRef{ get; set; }
 
         [JsonIgnore]
-        public string jsonCached { get; set; }
+        public byte[] jsonCached { get; set; }
 
 
 
@@ -66,7 +66,7 @@ namespace shared.Entities
                 else if (prop.Key=="mark") mark = prop.Value.Value<int>();
             }
 
-            jsonCached = JsonSerializers.Serialize(this);
+            jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(this));
 
         }
     }

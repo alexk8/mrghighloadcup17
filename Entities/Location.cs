@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
-
+using System.Text;
 
 namespace shared.Entities
 {
@@ -31,7 +31,7 @@ namespace shared.Entities
         public int distance = -1;// - расстояние от города по прямой в километрах. 32-разрядное целое число.
 
         [JsonIgnore]
-        public string jsonCached {get; set;}
+        public byte[] jsonCached {get; set;}
 
         List<Visit> visits;
 
@@ -61,7 +61,7 @@ namespace shared.Entities
                 else if (prop.Key == "city") this.city = prop.Value.Value<string>();
                 else if (prop.Key == "distance") this.distance = prop.Value.Value<int>();
             }
-            jsonCached = JsonSerializers.Serialize(this);
+            jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(this));
         }
     }
 }
