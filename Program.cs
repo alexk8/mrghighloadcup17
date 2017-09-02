@@ -15,7 +15,7 @@ namespace websrv1
         {
             try
             {
-                Console.WriteLine($"{DateTime.Now.ToString("hh:mm:ss")} START v2017-08-30 18:00 vKest BigData");
+                Console.WriteLine($"{DateTime.Now.ToString("hh:mm:ss")} START v2017-09-01 13:00 vKest BigData");
 
                 var host = WebHost.CreateDefaultBuilder(args)
 

@@ -26,12 +26,25 @@ namespace KestrelDemo
             Configuration = builder.Build();
 
 
-            string file = Configuration["server:dbdatafile"];
-            logger.LogInformation($"datafile: {file}");
+            string fileName = Configuration["server:dbdatafile"];
+            logger.LogInformation($"datafile: {fileName}");
 
             long started = DateTime.Now.Ticks;
-            var data = FileDbLoader.Load(file);
+            var data = FileDbLoader.Load(fileName);
             Console.WriteLine($"data loaded in {(DateTime.Now.Ticks - started) / 10000} ms");
+
+            if (data.currentTime == null)
+            {
+                try
+                {
+                    using (var file = File.OpenText(fileName.Replace("/data.zip", "/options.txt")))
+                        data.currentTime = file.ReadLine().ParseInt();
+                }
+                catch
+                {
+                    Console.WriteLine("no timestamp found neither in data.zip nor out of zip");
+                }
+            }
 
             var db = new InmemoryDatabase(data);
 

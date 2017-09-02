@@ -6,5 +6,6 @@ namespace shared.Services
     {
         bool insert<T>(T value) where T : class,IEntity;
         T find<T>(uint id) where T : class, IEntity;
+        int? CurrentTime { get; }
     }
 }

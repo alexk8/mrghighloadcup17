@@ -1,12 +1,24 @@
 ﻿using shared;
 using shared.Entities;
 using shared.Services;
+using System;
+using System.Text;
 
 namespace websrv1.Controllers
 {
     //replacement
-    public class Controller
+    public class ControllerBase
     {
+        protected readonly IDatabase db;
+        protected readonly int currentTime;
+
+        public ControllerBase(IDatabase db)
+        {
+            this.db = db;
+            currentTime = db.CurrentTime??DateTime.Now.ToUnixTimestamp();
+        }
+
+
         public object NotFound()
         {
             return new HttpError(404);
@@ -27,5 +39,7 @@ namespace websrv1.Controllers
             return JsonSerializers.SerializeUnknown(o);
             */
         }
+
+        protected static readonly byte[] emptyJSONObj = Encoding.ASCII.GetBytes("{}");
     }
 }

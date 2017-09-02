@@ -9,12 +9,10 @@ using System.Threading.Tasks;
 namespace websrv1.Controllers
 {
     [Route("[controller]")]
-    public class VisitsController : Controller
+    public class VisitsController : ControllerBase
     {
-        IDatabase db;
-        public VisitsController(IDatabase db)
+        public VisitsController(IDatabase db):base(db)
         {
-            this.db = db;
         }
 
         [HttpGet("{id:int}")]
@@ -50,13 +48,13 @@ namespace websrv1.Controllers
                 newLocation,
                 newUser
                 );
-            return "{}";//empty object
+            return emptyJSONObj;
         }
         [HttpPost("new")]
         public object Insert([FromBody]Visit visit)
         {
             if (!visit.Valid) return BadRequest();
-            if (db.insert(visit)) return "{}";
+            if (db.insert(visit)) return emptyJSONObj;
             else return BadRequest();
         }
 

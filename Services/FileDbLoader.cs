@@ -16,17 +16,40 @@ namespace shared.Services
         public List<Visit> visits = null;
     }
 
+    public class TaskFilesData
+    {
+        public List<DataFile> files;
+        public int? currentTime;
+    }
+
     public class FileDbLoader
     {
-        public static List<DataFile> Load(string zipFn)
+        public static TaskFilesData Load(string zipFn)
         {
             using (ZipArchive zip = ZipFile.OpenRead(zipFn))
             {
-                return zip.Entries
-                    .Where(file => file.Name.StartsWith("users") || file.Name.StartsWith("locations") || file.Name.StartsWith("visits"))
-                    .Select(file => JsonSerializers.DeserializeUtf8Stream<DataFile>(file.Open()))
-                    .ToList();
+                return new TaskFilesData {
+                    files = zip.Entries
+                        .Where(file => file.Name.StartsWith("users") || file.Name.StartsWith("locations") || file.Name.StartsWith("visits"))
+                        .Select(file => JsonSerializers.DeserializeUtf8Stream<DataFile>(file.Open()))
+                        .ToList(),
+                    currentTime = GetTimestampFrom(zip.Entries.Where(file => file.Name == "options.txt").SingleOrDefault())
+                    };
             }
         }
+
+        private static int? GetTimestampFrom(ZipArchiveEntry file)
+        {
+            if (file == null) return null;
+            using (var rdr = new StreamReader(file.Open(), Encoding.UTF8))
+            {
+                Console.WriteLine("zip/options found");
+                return rdr.ReadLine().ParseInt();
+            }
+        }
+
+
+
+
     }
 }

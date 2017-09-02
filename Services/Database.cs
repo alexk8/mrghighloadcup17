@@ -16,15 +16,18 @@ namespace shared.Services
         Dataset<Location> Locations;
         Dataset<Visit> Visits;
 
-        public InmemoryDatabase(List<DataFile> filesContents)
+        public int? CurrentTime { get; set; }
+
+        public InmemoryDatabase(TaskFilesData allData)
         {
             try
             {
                 long started = DateTime.Now.Ticks;
 
-                Users= new Dataset<User>(filesContents.Where(f => f.users != null).Select(f => f.users));
-                Locations= new Dataset<Location>(filesContents.Where(f => f.locations != null).Select(f => f.locations));
-                Visits= new Dataset<Visit>(filesContents.Where(f => f.visits != null).Select(f => f.visits));
+                CurrentTime = allData.currentTime;
+                Users = new Dataset<User>(allData.files.Where(f => f.users != null).Select(f => f.users));
+                Locations= new Dataset<Location>(allData.files.Where(f => f.locations != null).Select(f => f.locations));
+                Visits= new Dataset<Visit>(allData.files.Where(f => f.visits != null).Select(f => f.visits));
 
                 Console.WriteLine($"DB loaded in {(DateTime.Now.Ticks - started) / 10000} ms");
 

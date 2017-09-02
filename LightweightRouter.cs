@@ -27,13 +27,14 @@ namespace websrv1
         private Resp toJson(object val)
         {
             if (val == null) return new Resp { code = 404 };
-            else if (val is string) return new Resp { bodyStr = (string)val };
-            else if (val is HttpError) return new Resp { code = (val as HttpError).code };
             else if (val is IEntity)
             {
                 byte[] json = (val as IEntity).jsonCached;
                 if (json != null) return new Resp { body = json };
             }
+            else if (val is string) return new Resp { bodyStr = (string)val };
+            else if (val is HttpError) return new Resp { code = (val as HttpError).code };
+            else if (val is byte[]) return new Resp { body = (byte[])val };
             return new Resp { bodyStr = JsonSerializers.SerializeUnknown(val) };
         }
 

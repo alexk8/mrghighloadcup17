@@ -11,12 +11,10 @@ using websrv1.Models;
 namespace websrv1.Controllers
 {
     [Route("[controller]")]
-    public class LocationsController : Controller
+    public class LocationsController : ControllerBase
     {
-        IDatabase db;
-        public LocationsController(IDatabase db)
+        public LocationsController(IDatabase db):base(db)
         {
-            this.db = db;
         }
 
         [HttpGet("{id:int}")]
@@ -24,10 +22,6 @@ namespace websrv1.Controllers
         {
             return (object)db.find<Location>(id) ?? NotFound();
         }
-
-
-
-        static    int currentTime = DateTime.Now.ToUnixTimestamp();
 
         [HttpGet("{id:int}/avg")]
         public object GetAvg(uint id,[FromQuery]SearchRequest q)
@@ -89,13 +83,13 @@ namespace websrv1.Controllers
             if (obj == null) return NotFound();
             //if (!ModelState.IsValid) return BadRequest();
             obj.updateFrom(json);
-            return "{}";//empty object
+            return emptyJSONObj;
         }
         [HttpPost("new")]
         public object Insert([FromBody]Location loc)
         {
             if (!loc.Valid) return BadRequest();
-            if (db.insert(loc)) return "{}";
+            if (db.insert(loc)) return emptyJSONObj;
             else return BadRequest();
         }
 
