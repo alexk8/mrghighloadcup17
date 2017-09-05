@@ -20,7 +20,7 @@ namespace websrv1.Controllers
         [HttpGet("{id:int}")]
         public object Get(uint id)
         {
-            return (object)db.find<Location>(id) ?? NotFound();
+            return (object)db.Locations[id];// ?? NotFound();
         }
 
         [HttpGet("{id:int}/avg")]
@@ -28,9 +28,8 @@ namespace websrv1.Controllers
         {
             if (!q.IsValid) return BadRequest();
 
-            var location = db.find<Location>(id);
-            if (location == null) return NotFound();
-
+            var location = db.Locations[id];
+            if (location == null) return null;// NotFound();
 
             IEnumerable<Visit> visits = location.GetVisits()
               .Where(v =>
@@ -40,11 +39,8 @@ namespace websrv1.Controllers
                  && (!q.toAge.HasValue || Util.GetAge(currentTime, v.UserRef.birth_date) < q.toAge)
                  && (string.IsNullOrEmpty(q.gender) || v.UserRef.gender == q.gender)
                  );
-            List<Visit> visitsList = visits.ToList();//count
-            return Json(new { avg = visitsList.Count==0 ? 0.0 : Math.Round(visitsList.Average(v => v.mark), 5) });
-            //OR            return Json(new { avg = Math.Round(visits.Average(v => (int?)v.mark)??0, 5) });
-
-
+            
+            return Json(new { avg = Math.Round(visits.Average(v => (int?)v.mark)??0, 5) });
         }
 
         //EXTRA!!!
@@ -53,10 +49,9 @@ namespace websrv1.Controllers
         {
             if(!q.IsValid) return BadRequest();
 
-            var location = db.find<Location>(id);
-            if (location == null) return NotFound();
+            var location = db.Locations[id];
+            if (location == null) return null;// NotFound();
 
-            int currentTime = DateTime.Now.ToUnixTimestamp();
             IEnumerable<Visit> visits = location.GetVisits()
                 .Where(v=>true
                   && (!q.fromDate.HasValue|| v.visited_at > q.fromDate)
@@ -79,8 +74,8 @@ namespace websrv1.Controllers
                 if (t.Value.Type == JTokenType.Null)
                     return BadRequest();
 
-            var obj = db.find<Location>(id);
-            if (obj == null) return NotFound();
+            var obj = db.Locations[id];
+            if (obj == null) return null; //NotFound();
             //if (!ModelState.IsValid) return BadRequest();
             obj.updateFrom(json);
             return emptyJSONObj;
@@ -89,8 +84,8 @@ namespace websrv1.Controllers
         public object Insert([FromBody]Location loc)
         {
             if (!loc.Valid) return BadRequest();
-            if (db.insert(loc)) return emptyJSONObj;
-            else return BadRequest();
+            db.Locations[loc.id] = loc;
+            return emptyJSONObj;
         }
 
 

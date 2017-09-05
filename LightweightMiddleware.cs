@@ -21,18 +21,13 @@ namespace srvkestrel
             this.router = router;
         }
 
-        NameValueCollection ToNameValueCollection(IQueryCollection q)
-        {
-            var res = new NameValueCollection();
-            foreach (var item in q) res.Add(item.Key, item.Value);
-            return res;
-        }
-        private async Task<byte[]> ReadExact(Stream inputStream, int len)
+
+        private byte[] ReadExact(Stream inputStream, int len)
         {
             byte[] res = new byte[len];
             int done = 0;
             while (len > done)
-                done += await inputStream.ReadAsync(res, done, len - done).ConfigureAwait(false);
+                done += inputStream.Read(res, done, len - done);
             return res;
         }
 
@@ -68,7 +63,7 @@ namespace srvkestrel
         }
 
 
-        private async Task<Resp> processInternal(HttpRequest requ)
+        private Resp processInternal(HttpRequest requ)
         {
             try
             {
@@ -85,12 +80,12 @@ namespace srvkestrel
                 switch (requ.Method)
                 {
                     case "GET":
-                        return router.processGetRequest(requ.Path, ToNameValueCollection(requ.Query));
+                        return router.processGetRequest(requ.Path, requ.Query);
                     case "POST":
                         var len = requ.ContentLength;
                         if (len > 0)
                         {
-                            byte[] data = await ReadExact(requ.Body, checked((int)len)).ConfigureAwait(false);
+                            byte[] data = ReadExact(requ.Body, checked((int)len));
                             return router.processPostRequest(requ.Path, Encoding.UTF8.GetString(data));
                         }
                         else
@@ -115,6 +110,7 @@ namespace srvkestrel
 
         public async Task process(HttpContext client)
         {
+#if DEBUG
             long started = DateTime.Now.Ticks;
 
 
@@ -130,7 +126,8 @@ namespace srvkestrel
                                 Interlocked.Increment(ref portStat[port].requests);
             */
 
-            Resp resp = await processInternal(client.Request).ConfigureAwait(false);
+#endif
+            Resp resp = processInternal(client.Request);
             //object must be either null,string or byte[]
 
 
@@ -138,18 +135,23 @@ namespace srvkestrel
             client.Response.Headers["Connection"] = "keep-alive";
             //client.Response.Headers["Keep-Alive"] = "timeout=3000";
 
+#if DEBUG
             Interlocked.Add(ref Stats.totalTicksBefWrite, DateTime.Now.Ticks - started);
+#endif
             if (resp.code == 200)
             {
-                byte[] respdata;
-                if (resp.bodyStr!=null)
-                    respdata = Encoding.UTF8.GetBytes(resp.bodyStr);
-                else if (resp.body!=null)
-                    respdata = resp.body;
-                else respdata = empty;
-                client.Response.ContentLength = respdata.Length;
-                client.Response.ContentType = "application/json; charset=utf-8";
-                await client.Response.Body.WriteAsync(respdata, 0, respdata.Length).ConfigureAwait(false);
+                if (resp.bodyStr != null) {
+                    int len = Encoding.UTF8.GetByteCount(resp.bodyStr);
+                    client.Response.ContentLength = len;
+
+                    using(var wr =new StreamWriter(client.Response.Body)) wr.Write(resp.bodyStr);
+                }
+                else {
+                    byte[] respdata = resp.body ?? empty;
+                    client.Response.ContentLength = respdata.Length;
+                    client.Response.ContentType = "application/json; charset=utf-8";
+                    client.Response.Body.Write(respdata, 0, respdata.Length);
+                }
             }
             else
             {
@@ -157,11 +159,13 @@ namespace srvkestrel
                 //await client.Response.Body.WriteAsync(empty, 0, 0).ConfigureAwait(false);
             }
 
+#if DEBUG            
             long ticks = DateTime.Now.Ticks - started;
             Interlocked.Add(ref Stats.totalTicksALL, ticks);
             Interlocked.Increment(ref Stats.totalCnt);
 
             Interlocked.Exchange(ref Stats.maxval, Math.Max(ticks,Stats.maxval));
+#endif            
         }
     }
 }

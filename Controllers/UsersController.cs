@@ -19,7 +19,7 @@ namespace websrv1.Controllers
         [HttpGet("{id:int}")]
         public object Get(uint id)
         {
-            return (object)db.find<User>(id) ?? NotFound();
+            return (object)db.Users[id];//?? NotFound();
         }
 
         [HttpGet("{id:int}/visits")]
@@ -27,8 +27,8 @@ namespace websrv1.Controllers
         {
             if (!q.IsValid) return BadRequest();
 
-            var user = db.find<User>(id);
-            if (user == null) return NotFound();
+            var user = db.Users[id];
+            if (user == null) return null;// NotFound();
 
             IEnumerable<Visit> visits = user.GetVisits()
                 .Where(v => true
@@ -43,7 +43,7 @@ namespace websrv1.Controllers
 
             var v_join = visits.Select(v=>new {mark=v.mark, visited_at = v.visited_at, place=v.LocationRef?.place});
 
-            return Json(new { visits = v_join.OrderBy(v => v.visited_at).ToList() });
+            return Json(new { visits = v_join/*.OrderBy(v => v.visited_at).ToList()*/ });
 
         }
 
@@ -55,8 +55,8 @@ namespace websrv1.Controllers
                 if (t.Value.Type == JTokenType.Null)
                     return BadRequest();
 
-            var obj = db.find<User>(id);
-            if (obj == null) return NotFound();
+            var obj = db.Users[id];
+            if (obj == null) return null;// NotFound();
             //if (!ModelState.IsValid) return BadRequest();
             obj.updateFrom(json);
             return emptyJSONObj;
@@ -66,8 +66,8 @@ namespace websrv1.Controllers
         public object Insert([FromBody]User user)
         {
             if (!user.Valid) return BadRequest();
-            if (db.insert(user)) return emptyJSONObj;
-            else return BadRequest();
+            db.Users[user.id] = user;
+            return emptyJSONObj;
         }
 
     }

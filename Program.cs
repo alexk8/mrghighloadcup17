@@ -11,12 +11,18 @@ namespace websrv1
 {
     class Program
     {
+        public static string[] Args;
         public static void Main(string[] args = null)
         {
+            Args = args;
             try
             {
-                Console.WriteLine($"{DateTime.Now.ToString("hh:mm:ss")} START v2017-09-01 13:00 vKest BigData");
-
+                Console.WriteLine($"{DateTime.Now.ToString("hh:mm:ss")} START v2017-09-04 15:00 vKest BigData");
+#if DEBUG
+                Console.WriteLine("vDEBUG");
+#else
+                Console.WriteLine("vRELEASE");
+#endif
                 var host = WebHost.CreateDefaultBuilder(args)
 
                     .ConfigureLogging((hostingContext, logging) =>
@@ -31,14 +37,14 @@ namespace websrv1
                         options.AllowSynchronousIO = true;
                         //options.ApplicationSchedulingMode = SchedulingMode.ThreadPool; =default
                     })
-                    /*
+                    
                     .UseLibuv(opts =>
                         {
-                            opts.ThreadCount = 2;
+                            //opts.ThreadCount = 2;
                         }
                     )
-                    */
-                    //.UseUrls("http://127.0.0.1:80")
+                    
+                    //.UseUrls("http://+:80")
                     .Build();
 
                 Console.WriteLine($"{DateTime.Now.ToString("hh:mm:ss")} Begin processing");
@@ -54,7 +60,9 @@ namespace websrv1
         private static async Task tester()
         {
             await warmup();
+#if DEBUG
             long lastcount=0;
+            
             while (true)
             {
                 int sec = 10;
@@ -69,7 +77,7 @@ namespace websrv1
                 lastcount = Stats.totalCnt;
                 
             }
-
+#endif
         }
 
         private static async Task warmup()

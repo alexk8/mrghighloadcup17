@@ -18,7 +18,7 @@ namespace websrv1.Controllers
         [HttpGet("{id:int}")]
         public object Get(uint id)
         {
-            return (object)db.find<Visit>(id) ?? NotFound();
+            return (object)db.Visits[id];//?? NotFound();
         }
 
         [HttpPost("{id:int}")]
@@ -27,21 +27,21 @@ namespace websrv1.Controllers
             foreach (var t in json)
                 if (t.Value.Type == JTokenType.Null)
                     return BadRequest();
-            var obj = db.find<Visit>(id);
-            if (obj == null) return NotFound();
+            var obj = db.Visits[id];
+            if (obj == null) return null; // NotFound();
             //if (!ModelState.IsValid) return BadRequest();
 
 
             Location newLocation = null;
             if (json["location"] != null && json["location"].Value<uint>() != obj.location)
             {
-                newLocation = db.find<Location>(json["location"].Value<uint>());
+                newLocation = db.Locations[json["location"].Value<uint>()];
                 if (newLocation == null) return BadRequest();
             }
             User newUser = null;
             if (json["user"] != null && json["user"].Value<uint>() != obj.user)
             {
-                newUser = db.find<User>(json["user"].Value<uint>());
+                newUser = db.Users[json["user"].Value<uint>()];
                 if (newUser == null) return BadRequest();
             }
             obj.updateFrom(json,
@@ -54,8 +54,20 @@ namespace websrv1.Controllers
         public object Insert([FromBody]Visit visit)
         {
             if (!visit.Valid) return BadRequest();
-            if (db.insert(visit)) return emptyJSONObj;
-            else return BadRequest();
+
+            User user = db.Users[visit.user];
+            Location location = db.Locations[visit.location];
+            if (user == null || location == null) return BadRequest();
+
+            db.Visits[visit.id] = visit;
+
+            visit.UserRef = user;
+            visit.LocationRef = location;
+            user.AddVisit(visit);
+            location.AddVisit(visit);
+
+            return emptyJSONObj;
+            
         }
 
     }

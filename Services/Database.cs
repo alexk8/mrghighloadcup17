@@ -12,9 +12,9 @@ namespace shared.Services
     public class InmemoryDatabase:IDatabase
     {
 
-        Dataset<User> Users;
-        Dataset<Location> Locations;
-        Dataset<Visit> Visits;
+        public Dataset<User> Users { get; private set; }
+        public Dataset<Location> Locations { get; private set; }
+        public Dataset<Visit> Visits { get; private set; }
 
         public int? CurrentTime { get; set; }
 
@@ -31,20 +31,7 @@ namespace shared.Services
 
                 Console.WriteLine($"DB loaded in {(DateTime.Now.Ticks - started) / 10000} ms");
 
-
-                Console.Write("GC:");
-                GC.Collect();
-                Console.WriteLine("OK");
-
-                started = DateTime.Now.Ticks;
                 InitCaches();
-                Console.WriteLine("generating json cache");
-                InitJsonCaches();
-                Console.WriteLine($"cash done in {(DateTime.Now.Ticks - started) / 10000} ms");
-
-                Console.Write("GC:");
-                GC.Collect();
-                Console.WriteLine("OK");
             }
             catch (Exception e)
             {
@@ -52,18 +39,13 @@ namespace shared.Services
             }
         }
 
-        private void InitJsonCaches()
-        {
-            foreach (var x in Users.Values) x.jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(x));
-            foreach (var x in Locations.Values) x.jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(x));
-            
-            //too much memory (remove line)
-            //foreach (var x in Visits.Values) x.jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(x)); 
-        }
-
         private void InitCaches()
         {
-            foreach (Visit visit in Visits.Values)
+            GC.Collect();// free some mem
+
+            long started = DateTime.Now.Ticks;
+
+            foreach (Visit visit in Visits)
             {
                 var user = Users[visit.user];
                 var location = Locations[visit.location];
@@ -72,39 +54,16 @@ namespace shared.Services
                 user.AddVisit(visit);
                 location.AddVisit(visit);
             }
+
+            foreach (var x in Users) x.jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(x));
+            foreach (var x in Locations) x.jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(x));
+            //too much memory (remove line)
+            //foreach (var x in Visits.Values) x.jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(x)); 
+
+            Console.WriteLine($"cash done in {(DateTime.Now.Ticks - started) / 10000} ms");
+
+            GC.Collect();//prepare to fight
         }
-
-
-        public Dataset<T> GetDataset<T>() where T:class,IEntity
-        {
-            if (typeof(T) == typeof(User)) return Users as Dataset<T>;
-            else if (typeof(T) == typeof(Location)) return Locations as Dataset<T>;
-            else if (typeof(T) == typeof(Visit)) return Visits as Dataset<T>;
-            else throw new Exception("bad entity type");
-        }
-
-        public bool insert<T>(T value) where T : class,IEntity
-        {
-            GetDataset<T>()[value.id] = value;
-            if (typeof(T) == typeof(Visit))
-            {
-                Visit visit = value as Visit;
-                User user = Users[visit.user];
-                Location location = Locations[visit.location];
-                if (user == null || location == null) return false;
-                visit.UserRef = user;
-                visit.LocationRef = location;
-                user.AddVisit(visit);
-                location.AddVisit(visit);
-            }
-            return true;
-        }
-
-        public T find<T>(uint id) where T : class,IEntity
-        {
-            return GetDataset<T>()[id];
-        }
-
 
     }
 }

@@ -8,6 +8,7 @@ using shared.Services;
 using shared.Entities;
 using shared;
 using srvkestrel;
+using Microsoft.AspNetCore.Http;
 
 namespace websrv1
 {
@@ -44,7 +45,7 @@ namespace websrv1
         VisitsController visits;
 
 
-        public Resp processGetRequest(string pathStr, NameValueCollection query)
+        public Resp processGetRequest(string pathStr, IQueryCollection query)
         {
             string[] path = pathStr.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (path.Length < 2) return new Resp { code = 404 };

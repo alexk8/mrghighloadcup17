@@ -33,7 +33,7 @@ namespace shared.Services
                         .Where(file => file.Name.StartsWith("users") || file.Name.StartsWith("locations") || file.Name.StartsWith("visits"))
                         .Select(file => JsonSerializers.DeserializeUtf8Stream<DataFile>(file.Open()))
                         .ToList(),
-                    currentTime = GetTimestampFrom(zip.Entries.Where(file => file.Name == "options.txt").SingleOrDefault())
+                    currentTime = GetTimestampFrom(zip.Entries.SingleOrDefault(file => file.Name == "options.txt"))
                     };
             }
         }

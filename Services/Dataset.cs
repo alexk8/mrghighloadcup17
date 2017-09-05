@@ -4,10 +4,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Collections;
 
 namespace srvkestrel
 {
-    public class Dataset<T> where T : class, IEntity
+    public class Dataset<T>: IEnumerable<T> where T : class, IEntity
     {
         //TWO storages (dict and array)
         ConcurrentDictionary<uint, T> dict;
@@ -21,7 +22,7 @@ namespace srvkestrel
             ARRAYSIZE += 10000;
             array = new T[ARRAYSIZE];
             dict = new ConcurrentDictionary<uint, T>(3, 1000);//initial capacity 1000
-            foreach (var x in batch.SelectMany(list => list))
+            foreach (T x in batch.SelectMany(list => list))
                 if (x.id < ARRAYSIZE)
                     array[x.id] = x;
                 else
@@ -47,8 +48,15 @@ namespace srvkestrel
                     dict[index] = value;
             }
         }
-        //public int Count => dict.Count+array???;
 
-        public IEnumerable<T> Values => array.Where(x=>x!=null).Concat(dict.Values);
+        public IEnumerator<T> GetEnumerator()
+        {
+            return array.Where(x => x != null).Concat(dict.Values).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return array.Where(x => x != null).Concat(dict.Values).GetEnumerator();
+        }
     }
 }

@@ -79,9 +79,21 @@ namespace shared.Entities
 
         }
 
-        List<Visit> visits;
 
-        static readonly Visit[] empty = new Visit[0];
+        SortedSet<Visit> visits;
+
+
+        class VisitComparer : IComparer<Visit>
+        {
+            public int Compare(Visit x, Visit y)
+            {
+                return x.visited_at.CompareTo(y.visited_at);
+            }
+        }
+        static VisitComparer visitcomparer =new VisitComparer();
+
+
+        static readonly SortedSet<Visit> empty = new SortedSet<Visit>();
         public IEnumerable<Visit> GetVisits()
         {
             if (visits != null) return visits;
@@ -89,7 +101,7 @@ namespace shared.Entities
         }
         public void AddVisit(Visit visit)
         {
-            if (visits == null) lock (this) if (visits == null) visits = new List<Visit>(15);
+            if (visits == null) lock (this) if (visits == null) visits = new SortedSet<Visit>(visitcomparer);
             visits.Add(visit);
         }
         public void RemoveVisit(Visit visit){

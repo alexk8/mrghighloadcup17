@@ -3,6 +3,12 @@
     "websrv1": {
       "commandName": "Project",
       "environmentVariables": {
+      },
+      "applicationUrl": "http://localhost:8080/"
+    },
+    "websrv1-dev": {
+      "commandName": "Project",
+      "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "applicationUrl": "http://localhost:8080/"

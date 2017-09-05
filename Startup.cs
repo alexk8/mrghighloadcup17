@@ -21,13 +21,15 @@ namespace KestrelDemo
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json")
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddEnvironmentVariables();
+                .AddEnvironmentVariables()
+                .AddCommandLine(Program.Args);
 
             Configuration = builder.Build();
 
 
             string fileName = Configuration["server:dbdatafile"];
-            logger.LogInformation($"datafile: {fileName}");
+            Console.WriteLine($"datafile: {fileName}");
+            Console.WriteLine($"reading zip: {new FileInfo(fileName).Length/1024/1024} Mb");
 
             long started = DateTime.Now.Ticks;
             var data = FileDbLoader.Load(fileName);

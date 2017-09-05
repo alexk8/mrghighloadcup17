@@ -42,7 +42,8 @@ namespace shared.Entities
         {
             foreach (var prop in val)
             {
-                if (prop.Key=="location"){
+                if (prop.Key == "location")
+                {
                     uint oldVal = location;
                     location = prop.Value.Value<uint>();
                     if (oldVal != location)
@@ -51,8 +52,9 @@ namespace shared.Entities
                         LocationRef = newLoc;
                         LocationRef.AddVisit(this);
                     }
-                }  
-                else if (prop.Key=="user"){
+                }
+                else if (prop.Key == "user")
+                {
                     uint oldVal = user;
                     user = prop.Value.Value<uint>();
                     if (oldVal != user)
@@ -62,8 +64,13 @@ namespace shared.Entities
                         UserRef.AddVisit(this);
                     }
                 }
-                else if (prop.Key=="visited_at") visited_at = prop.Value.Value<int>();
-                else if (prop.Key=="mark") mark = prop.Value.Value<int>();
+                else if (prop.Key == "visited_at")
+                {
+                    UserRef.RemoveVisit(this);
+                    visited_at = prop.Value.Value<int>();
+                    UserRef.AddVisit(this);
+                }
+                else if (prop.Key == "mark") mark = prop.Value.Value<int>();
             }
 
             jsonCached = Encoding.UTF8.GetBytes(JsonSerializers.Serialize(this));

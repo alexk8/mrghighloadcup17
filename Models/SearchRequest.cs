@@ -5,25 +5,24 @@ using System.Linq;
 using System.Threading.Tasks;
 using shared.Services;
 using shared;
+using Microsoft.AspNetCore.Http;
 
 namespace websrv1.Models
 {
     public class SearchRequest
     {
-        private NameValueCollection query;
-
-        public SearchRequest(NameValueCollection query)
+        public SearchRequest(IQueryCollection query)
         {
-            this.query = query;
             try
             {
-                fromDate = query["fromDate"]?.ParseInt();
-                toDate = query["toDate"]?.ParseInt();
-                fromAge  = query["fromAge"]?.ParseInt();
-                toAge  = query["toAge"]?.ParseInt();
-                toDistance = query["toDistance"]?.ParseInt();
+                
+                fromDate = query["fromDate"].FirstOrDefault()?.ParseInt();
+                toDate = query["toDate"].FirstOrDefault()?.ParseInt();
+                fromAge  = query["fromAge"].FirstOrDefault()?.ParseInt();
+                toAge  = query["toAge"].FirstOrDefault()?.ParseInt();
+                toDistance = query["toDistance"].FirstOrDefault()?.ParseInt();
 
-                gender = query["gender"]?.Validate("^[fm]$");
+                gender = query["gender"].FirstOrDefault()?.Validate("^[fm]$");
                 country = query["country"];
                 IsValid = true;
             }
